@@ -1,0 +1,26 @@
+---
+title: "Big Data Project"
+author: "Heva Yumi"
+date: "5/12/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<strong>Big Data Project Content>
+This project aims for analyzing fisheries data statistic of East Kalimantan Province related to fishing vessel modernization. It consists of four parts:
+<ul>
+  <li>The R script</li>
+  <li>The R markdown of the script</li>
+  <li>An analysis paper based on the results of R markdown</li>
+  <li>Read me file</li>
+</ul>
+
+
+<strong>Briefly Summmary>
+Several graphs are presented in script, markdown and paper. There are three models run in linear regression to check the correlation. The independent variable (y) is used to test the dependent variable (x) to know the effect on dependent. Firstly, vessel (y) toward production (x). Secondly, motor boat toward outboard boat and no engine boat. Lastly, fisheries toward production.
+
+
+<strong>Result>
+From three models, only first model (vessel toward production) which is correlated that every increase of 1 unit boat will increase the production of 2.737e-01 ton. The second and third model do not have correlation of the dependent variables.
