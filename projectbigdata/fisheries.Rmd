@@ -1,0 +1,200 @@
+---
+Author: Heva Yumi
+Date: 5/11/2018
+Output:
+  pdf_document: default
+  html_document: default
+Title: 'Fisheries Modernization of East Kalimantan Province '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+This is an R Markdown of fisheries data statistic of East Kalimantan Province related to fishing vessel modernization. Generally, it provides data pertaining to fishing vessel, fish production, fishermen from 2000-2015. However, the limitation of online source data makes some variable such as fishermen can only be provided from 2010-2012 which follows the range of other data.
+
+The process of data visualisation using R can be divided into: 
+<ul>
+  <li>Load the library</li>
+  <li>Read the data file</li>
+  <li>Clean the data</li>
+  <li>Plot Data</li>
+  <li>Analyze R square and p-value</li>
+  <li>Summary</li>
+  <li>Conclusion</li>
+</ul>
+
+<strong>Load the library</strong>
+```{r load, warning=FALSE, message=FALSE}
+#load library
+library(tidyverse)
+library(lubridate)
+library(gridExtra)
+library(ggplot2)
+library(dbplyr)
+library(reshape2)
+library(grid)
+```
+<strong>Read the data file</strong>
+```{r read}
+#load data from east borneo
+east_borneo <- read.csv("eastborneo.csv")
+```
+<strong>Generate table and column</strong>
+```{r boat_typedata, warning=FALSE, message=FALSE}
+#Read file of type boat
+boattype <- read.csv("typeboat.csv")
+#Delete column 6:7
+boatype <-  boattype[, -c(6:7)]
+#Delete rows of NA
+boatype[rowSums(is.na(boattype))!=ncol(boattype),]
+boatype <- boattype[0:16, ]
+
+#Add new columns and titles in boatype table
+boatype$newcolumn<-"na"
+colnames(boatype)[6] <- "%none"
+boatype$newcolumn<-"na"
+colnames(boatype)[7] <- "%outboard"
+boatype$newcolumn<-"na"
+colnames(boatype)[8] <- "%motorboard"
+#Calculate percentage of boat type (none, outboard, motorboat)
+boatype$`%none` <- boatype$none / boatype$total * 100
+boatype$`%outboard` <- boatype$outboard / boatype$total * 100
+boatype$`%motorboard` <- boatype$motorboat / boatype$total * 100
+```
+<ul>
+<li>Create table of type of boat and percentages (2000-2015): East Kalimantan
+)</li>
+</ul>
+```{r boat_type, warning=FALSE, message=FALSE}
+print(boatype)
+```
+
+<strong>Plot the data</strong>
+<ul>
+<li>Create bar chart vessel by year (2000-2015): East Kalimantan(Plot1)</li>
+</ul>
+```{r vessel_by_year, warning=FALSE, message=FALSE}
+g <- ggplot(east_borneo, aes(Year, Vessel))
+g + geom_bar(stat="identity", width = 0.5, fill="tomato2") + 
+  labs(title="Vessel by Year",
+       subtitle="East Kalimantan Province", 
+       caption="Source: Statistic Bureau of Indonesia") +
+  theme(axis.text.x = element_text(angle=65, vjust=0.5)) +
+  theme(plot.title = element_text(hjust=0.5)) + 
+  theme(plot.subtitle = element_text(hjust=0.5)) +
+  scale_x_continuous(breaks = seq(2000, 2015, 1))
+#Save plot as jpeg
+ggsave("image/plot1.jpg")
+```
+<ul>
+<li>Create trend series of production by year (2000-2015): East Kalimantan(Plot2)</li>
+</ul>
+```{r east_borneo, warning=FALSE, message=FALSE}
+g <- ggplot(east_borneo, aes(Year, Prod))
+g + geom_line(colour = "green") + 
+  labs(title="Production by Year",
+       subtitle="East Kalimantan Province", 
+       caption="Source: Statistic Bureau of Indonesia") +
+  theme(axis.text.x = element_text(angle=35, vjust=0.5)) +
+  theme(plot.title = element_text(hjust=0.5)) + 
+  theme(plot.subtitle = element_text(hjust=0.5)) +
+  scale_x_continuous(breaks = seq(2000, 2015, 1))
+#Save plot as jpeg
+ggsave("image/plot2.jpg")
+```
+<ul>
+<li>Create trend series of graph total production of All Kalimantan Province(Plot3)</li>
+</ul>
+```{r borneoprov, warning=FALSE, message=FALSE}
+#Read file of kalimantan province
+borneoprov <- read.csv("borneoprov.csv")
+stringsAsFactors=FALSE
+#Delete rows containing NA values
+NROW(borneoprov)
+borneoprov <- borneoprov[!is.na(borneoprov$year),]
+#Create graph total production of Kalimantan Province
+ggplot(borneoprov, aes(x=year, y=prod, colour=kalprov, group=kalprov)) +
+  geom_line() +
+  geom_point() +
+  labs(title="Total Production",
+       subtitle="Kalimantan Province", 
+       caption="Source: Statistic Bureau of Indonesia") +
+  theme(plot.title = element_text(hjust=0.5)) + 
+  theme(plot.subtitle = element_text(hjust=0.5)) +
+  scale_y_continuous(breaks = seq(0, 200000, 25000))
+ggsave("image/plot3.jpg")
+```
+<ul>
+<li>Create bar plot of ratio total production of Kalimantan Province(Plot4)</li>
+</ul>
+```{r fisher_prod, warning=FALSE, message=FALSE}
+#Read file of kalimantan province
+fisher_men <- read.csv("fishers.csv")
+fisher_menn <-  fisher_men[0:12, ]
+ggplot(fisher_menn, aes(y=prod, x=year, color=kalprov, fill=kalprov)) + 
+  geom_bar( stat="identity") +
+  labs(title="All Kalimantan Production",
+       subtitle="Kalimantan Province", 
+       caption="Source: Statistic Bureau of Indonesia") +
+  theme(plot.title = element_text(hjust=0.5)) + 
+  theme(plot.subtitle = element_text(hjust=0.5)) 
+ggsave("image/plot4.jpg")
+```
+<ul>
+<li>Create none, outboard, and motorboard graph of Kalimantan Province(Plot4)</li>
+</ul>
+```{r compare boat, warning=FALSE, message=FALSE}
+barplot(cbind(boatype$none, boatype$outboard, boatype$motorboat), 
+        main="year", ylab="Total", beside=TRUE)
+```
+
+<strong>Analyze R square and p-value</strong>
+```{r regression, warning=FALSE, message=FALSE}
+# Fit regression model1a: Relationship between motorboard and outboard:East Kalimantan
+motorboat1 <- lm(motorboat ~ outboard, data=boatype) 
+# Summarize and print the results
+summary(motorboat1) # show regression coefficients table
+#Call:
+lm(formula = motorboat ~ outboard, data=boatype)
+# Fit our regression model1b: Relationship between motorboard and none motor:East Kalimantan
+motorboat2 <- lm(motorboat ~ none, data=boatype) 
+# Summarize and print the results
+summary(motorboat2) # show regression coefficients table
+#Call:
+lm(formula = none ~ motorboat, data=boatype)
+
+# Fit regression model2:Relationship between vessel and prod:East Kalimantan
+vessel_prod <- lm(Vessel ~ Prod, data=east_borneo) 
+# Summarize and print the results
+summary(vessel_prod) # show regression coefficients table
+#Call:
+lm(formula = Vessel ~ Prod, data = east_borneo)
+
+# Fit  regression model2: Relationship between the number of fishermen and production
+fisher_prod <- lm(fishermen ~ prod, data=fisher_menn) 
+# Summarize and print the results
+summary(fisher_prod) # show regression coefficients table
+#Call:
+lm(formula = fishermen ~ prod, data=fisher_menn)
+```
+<strong>Summary</strong>
+From statistically run test, it is found that:
+
+<ul>
+<li>Model1:Relationship between motorboat and no engine and outboard</li>
+</ul>
+From p value: 0.57 (outboard) and 0.41(no engine) which is more than 0.05. It means that it does not reject the NULL hypothesis mentioning that there is no relationship between motorboat and no engine and outboard. In other words, it accept H0. Hence, the increases of motorboat does not impact the number of outboard boat and no engine boat.
+
+<ul>
+<li>Model2:Relationship between vessel and prod</li>
+</ul>
+From p value: 0.04 (<0.05), this reject hypothesis NULL. Therefore, there is correlation that every increase of 1 unit boat will increase the production of 2.737e-01 ton. Multiple square is 0.25 which means that the model explains that 25% of the variability data is around mean.
+
+<ul>
+<li>Model3:Relationship between fishermen and prod</li>
+</ul>
+From p value: 0.3 (>0.05), this model does not reject H0. There is no correlation between the number of fishermen and the total production.
+
+<strong>Conclusion</strong>
+After providing table, graph visualization and statistic analysis, it is known that the data value is ups and downs. However, the focus on this paper is to find the correlation between variabel. From three models tested, only vessel that affect the number of production in East Kalimantan province.
